@@ -6,6 +6,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#183e37">
 <title>My German Companion</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<meta name="apple-mobile-web-app-capable"
+      content="yes">
+<meta name="apple-mobile-web-app-title"
+      content="Deutsch">
+<meta name="apple-mobile-web-app-status-bar-style"
+      content="default">
+
 <style>
 :root{font-family:system-ui,-apple-system,sans-serif;color:#203a35;background:#f5f7f5}
 *{box-sizing:border-box}
@@ -388,6 +397,17 @@ $("answers").append(b);
 });
 }
 updateStats();renderMine();renderFlash();
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .catch(error => {
+        console.log("Offline setup failed:", error);
+      });
+  });
+}
 </script>
 </body>
 </html>
