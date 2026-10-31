@@ -1,0 +1,19 @@
+
+{
+  "name": "My German Companion",
+  "short_name": "Deutsch",
+  "description": "My personal German learning companion",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f7f5",
+  "theme_color": "#183e37",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
