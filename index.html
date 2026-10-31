@@ -1,0 +1,393 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#183e37">
+<title>My German Companion</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#203a35;background:#f5f7f5}
+*{box-sizing:border-box}
+body{margin:0}
+header{background:#183e37;color:white;padding:24px 18px}
+main{max-width:780px;margin:auto;padding:16px}
+h1{margin:8px 0;font-size:27px}
+h2{font-size:21px}
+p{line-height:1.55}
+nav{display:flex;gap:7px;overflow-x:auto;padding:12px 0}
+button,select,input{font:inherit}
+button{cursor:pointer;border:1px solid #d5ded9;border-radius:10px;padding:10px;background:white;color:#183e37}
+button.active,.primary{background:#183e37;color:white}
+nav button{white-space:nowrap}
+.card{background:white;border:1px solid #dce5df;border-radius:15px;padding:18px;margin:12px 0}
+.hidden{display:none}
+input,select{padding:12px;border:1px solid #cbd7d0;border-radius:9px;width:100%;margin:5px 0}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{flex:1;min-width:0}
+.word{border-bottom:1px solid #e4ebe6;padding:12px 0;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.word:last-child{border:0}
+.muted{color:#66766f;font-size:13px}
+.der{color:#2869c6}.die{color:#bb3972}.das{color:#00866c}
+#flash{min-height:210px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer}
+#flashFront{font-size:28px;font-weight:750}
+.choice{display:block;width:100%;text-align:left;margin:8px 0}
+.correct{background:#d9f5e4}.wrong{background:#fbe0e0}
+details summary{cursor:pointer;font-weight:650}
+details p{font-size:14px}
+.small{font-size:12px}
+</style>
+</head>
+<body>
+<header>
+<div style="max-width:780px;margin:auto">
+<div style="font-size:12px;letter-spacing:2px">DEUTSCH LERNEN · A1–A2</div>
+<h1>🇩🇪 My German Companion</h1>
+<p>Learn practical German for everyday life in Zürich.</p>
+<div id="stats">Your personal learning companion</div>
+</div>
+</header>
+<main>
+<nav id="navigation">
+<button class="active" data-page="home">Home</button>
+<button data-page="grammar">Grammar</button>
+<button data-page="phrases">Phrases</button>
+<button data-page="vocab">Vocabulary</button>
+<button data-page="mine">My Words</button>
+<button data-page="practice">Practice</button>
+</nav>
+
+<section id="home">
+<div class="card">
+<div class="muted">PHRASE OF THE DAY</div>
+<h2>Ich lerne Deutsch.</h2>
+<p>I'm learning German.</p>
+<button onclick="speak('Ich lerne Deutsch')">🔊 Listen</button>
+</div>
+<div class="card">
+<h2>Your daily 15-minute routine</h2>
+<p>📖 5 minutes — Study a grammar rule</p>
+<p>🗂️ 5 minutes — Learn vocabulary and save new words</p>
+<p>🧠 5 minutes — Practise flashcards or quizzes</p>
+<button class="primary" onclick="show('practice')">Start practising</button>
+</div>
+<div class="card">
+<h3>🇨🇭 Swiss German tip</h3>
+<p>Learn Standard German first. People in Zürich often speak Swiss German, but Standard German is useful for reading, writing and everyday communication.</p>
+<p>Grüezi = Hello · Merci = Thanks · Adieu = Goodbye</p>
+</div>
+</section>
+
+<section id="grammar" class="hidden">
+<h2>Grammar essentials</h2>
+<div id="grammarList"></div>
+</section>
+
+<section id="phrases" class="hidden">
+<h2>Common phrases</h2>
+<select id="phraseCategory" onchange="renderPhrases()"></select>
+<div class="card" id="phraseList"></div>
+</section>
+
+<section id="vocab" class="hidden">
+<h2>Essential vocabulary</h2>
+<input id="search" placeholder="Search English or German" oninput="renderVocab()">
+<select id="category" onchange="renderVocab()"></select>
+<div class="card" id="vocabList"></div>
+</section>
+
+<section id="mine" class="hidden">
+<h2>My personal word bank</h2>
+<p>Add words you encounter in Rosetta Stone or everyday conversations. Always learn a noun with its article and plural.</p>
+<div class="card">
+<h3>Add a word</h3>
+<select id="type" onchange="toggleFields()">
+<option value="noun">Noun</option>
+<option value="verb">Verb</option>
+<option value="other">Other word or phrase</option>
+</select>
+<div class="row">
+<input id="german" placeholder="German word">
+<input id="english" placeholder="English meaning">
+</div>
+<div id="nounFields" class="row">
+<select id="article">
+<option>der</option><option>die</option><option>das</option>
+</select>
+<input id="plural" placeholder="Plural e.g. Häuser">
+</div>
+<div id="verbFields" class="row hidden">
+<input id="ich" placeholder="ich form">
+<input id="participle" placeholder="Past participle">
+</div>
+<input id="example" placeholder="Example sentence (optional)">
+<button class="primary" onclick="addWord()">+ Save word</button>
+<p id="message" class="muted"></p>
+</div>
+<div class="row">
+<button onclick="exportWords()">↓ Export CSV</button>
+<label style="flex:1">Import CSV
+<input type="file" accept=".csv" onchange="importWords(event)">
+</label>
+</div>
+<div class="card" id="myList"></div>
+</section>
+
+<section id="practice" class="hidden">
+<h2>Practice</h2>
+<div class="row">
+<button onclick="setMode('flash')">Flashcards</button>
+<button onclick="setMode('quiz')">Quick quiz</button>
+</div>
+<select id="source" onchange="resetPractice()">
+<option value="all">All vocabulary</option>
+<option value="mine">My words only</option>
+<option value="review">Not yet mastered</option>
+</select>
+<div id="flashArea">
+<div class="card" id="flash" onclick="flip()">
+<div class="muted" id="flashType"></div>
+<div id="flashFront"></div>
+<p id="flashBack" class="muted">Tap to reveal</p>
+</div>
+<div class="row">
+<button onclick="previousCard()">← Previous</button>
+<button onclick="nextCard()">Next →</button>
+</div>
+<p><button class="primary" onclick="markMastered()">✓ Mark as mastered</button>
+<button onclick="listenCard()">🔊 Listen</button></p>
+<p id="flashCount" class="muted"></p>
+</div>
+<div id="quizArea" class="card hidden">
+<p id="quizCount" class="muted"></p>
+<h3 id="question"></h3>
+<div id="answers"></div>
+<p id="feedback"></p>
+<button id="nextQuestion" class="primary hidden" onclick="newQuestion()">Next question →</button>
+</div>
+</section>
+<p class="muted small">Your word bank is saved on this device when browser storage is available. Export backups regularly.</p>
+</main>
+
+<script>
+const grammar=[
+["Noun genders","German nouns have a gender. Memorise der, die or das with every noun.","der Hund · die Wohnung · das Haus","All plural nouns use die."],
+["Pronouns","ich = I, du = informal you, er = he, sie = she, es = it, wir = we, ihr = you plural, sie = they, Sie = formal you.","Ich lerne Deutsch.","Use Sie in formal situations."],
+["Present tense","Regular verbs take endings -e, -st, -t, -en, -t, -en.","ich lerne · du lernst · er lernt · wir lernen","Common verbs such as sein are irregular."],
+["Word order","The conjugated verb is in second position in a normal main clause.","Ich lerne heute Deutsch. · Heute lerne ich Deutsch.","The subject moves after the verb when another element comes first."],
+["Questions","Yes/no questions start with the verb. W-questions start with a question word.","Lernst du Deutsch? · Wo wohnst du?","wer, was, wo, wann, warum and wie are useful question words."],
+["Accusative","Masculine der becomes den and ein becomes einen when used as a direct object.","Ich sehe den Hund. · Ich kaufe einen Kaffee.","Other nominative articles usually keep their form in the accusative."],
+["Dative","Dative articles include dem, der and den.","mit dem Hund · mit der Freundin · mit den Kindern","Some prepositions always require dative."],
+["Negation","Use kein for many nouns and nicht for verbs, adjectives and other parts of sentences.","Ich habe kein Auto. · Ich komme nicht.","kein changes with gender and case."],
+["Modal verbs","Modal verbs express ability, necessity, permission or wishes.","Ich kann Deutsch sprechen. · Ich muss arbeiten.","The second verb normally goes to the end in the infinitive."],
+["Perfect past","Use haben or sein with a past participle.","Ich habe gelernt. · Ich bin gegangen.","Many movement verbs use sein."],
+["Separable verbs","Some verb prefixes move to the end of a main clause.","Ich stehe um sieben Uhr auf.","aufstehen means to get up."],
+["Prepositions","Some prepositions take fixed cases. Two-way prepositions can indicate location or destination.","Ich bin in der Schule. · Ich gehe in die Schule.","in, an and auf are common two-way prepositions."],
+["Adjectives","Adjectives before nouns often need endings. After sein they usually do not.","Das Haus ist schön. · Ein schönes Haus.","Learn common adjective phrases first."],
+["Time","Learn numbers and time for daily life.","eins, zwei, drei · Es ist halb acht.","halb acht means 7:30."],
+["Connectors","und, aber and oder connect ideas. weil sends the conjugated verb to the end of its clause.","Ich lerne Deutsch, weil ich in Zürich wohne.","denn means because but keeps main-clause word order."]
+];
+const nounData=[
+["der","Mann","Männer","man","People"],["die","Frau","Frauen","woman","People"],["das","Kind","Kinder","child","People"],["die","Familie","Familien","family","People"],["der","Freund","Freunde","friend","People"],["die","Freundin","Freundinnen","female friend","People"],["der","Hund","Hunde","dog","People"],["die","Katze","Katzen","cat","People"],
+["das","Haus","Häuser","house","Home"],["die","Wohnung","Wohnungen","apartment","Home"],["das","Zimmer","Zimmer","room","Home"],["die","Küche","Küchen","kitchen","Home"],["das","Bad","Bäder","bathroom","Home"],["der","Tisch","Tische","table","Home"],["der","Stuhl","Stühle","chair","Home"],["das","Bett","Betten","bed","Home"],["die","Tür","Türen","door","Home"],["das","Fenster","Fenster","window","Home"],["der","Schlüssel","Schlüssel","key","Home"],
+["das","Wasser","—","water","Food"],["der","Kaffee","—","coffee","Food"],["der","Tee","—","tea","Food"],["das","Brot","Brote","bread","Food"],["der","Käse","—","cheese","Food"],["der","Apfel","Äpfel","apple","Food"],["die","Banane","Bananen","banana","Food"],["das","Ei","Eier","egg","Food"],["das","Gemüse","—","vegetables","Food"],["das","Obst","—","fruit","Food"],["die","Rechnung","Rechnungen","bill","Food"],
+["der","Bahnhof","Bahnhöfe","station","Travel"],["der","Zug","Züge","train","Travel"],["der","Bus","Busse","bus","Travel"],["die","Straße","Straßen","street","Travel"],["die","Haltestelle","Haltestellen","stop","Travel"],["das","Ticket","Tickets","ticket","Travel"],["die","Fahrkarte","Fahrkarten","travel ticket","Travel"],["der","Flughafen","Flughäfen","airport","Travel"],["das","Auto","Autos","car","Travel"],["das","Fahrrad","Fahrräder","bicycle","Travel"],
+["die","Arbeit","—","work","Work"],["das","Büro","Büros","office","Work"],["der","Termin","Termine","appointment","Work"],["die","Besprechung","Besprechungen","meeting","Work"],["die","E-Mail","E-Mails","email","Work"],["der","Kollege","Kollegen","colleague","Work"],["die","Kollegin","Kolleginnen","female colleague","Work"],["die","Frage","Fragen","question","Work"],
+["der","Tag","Tage","day","Time"],["die","Woche","Wochen","week","Time"],["der","Monat","Monate","month","Time"],["das","Jahr","Jahre","year","Time"],["die","Uhr","Uhren","clock","Time"],["die","Zeit","—","time","Time"],["der","Morgen","Morgen","morning","Time"],["der","Abend","Abende","evening","Time"],
+["die","Schule","Schulen","school","Daily life"],["der","Arzt","Ärzte","doctor","Daily life"],["die","Ärztin","Ärztinnen","female doctor","Daily life"],["die","Apotheke","Apotheken","pharmacy","Daily life"],["der","Supermarkt","Supermärkte","supermarket","Daily life"],["das","Geld","—","money","Daily life"],["der","Preis","Preise","price","Daily life"],["das","Wetter","—","weather","Daily life"],["der","Park","Parks","park","Daily life"],["das","Fitnessstudio","Fitnessstudios","gym","Daily life"]
+];
+const verbData=[
+["sein","to be","bin","gewesen"],["haben","to have","habe","gehabt"],["werden","to become","werde","geworden"],["gehen","to go","gehe","gegangen"],["kommen","to come","komme","gekommen"],["machen","to do/make","mache","gemacht"],["sprechen","to speak","spreche","gesprochen"],["lernen","to learn","lerne","gelernt"],["verstehen","to understand","verstehe","verstanden"],["wissen","to know a fact","weiß","gewusst"],["kennen","to know/be familiar","kenne","gekannt"],["essen","to eat","esse","gegessen"],["trinken","to drink","trinke","getrunken"],["kaufen","to buy","kaufe","gekauft"],["bezahlen","to pay","bezahle","bezahlt"],["brauchen","to need","brauche","gebraucht"],["mögen","to like","mag","gemocht"],["möchten","would like","möchte","—"],["können","can","kann","gekonnt"],["müssen","must","muss","gemusst"],["wollen","to want","will","gewollt"],["dürfen","may/be allowed","darf","gedurft"],["sollen","should","soll","gesollt"],["fahren","to travel/drive","fahre","gefahren"],["nehmen","to take","nehme","genommen"],["geben","to give","gebe","gegeben"],["finden","to find","finde","gefunden"],["sehen","to see","sehe","gesehen"],["lesen","to read","lese","gelesen"],["schreiben","to write","schreibe","geschrieben"],["arbeiten","to work","arbeite","gearbeitet"],["wohnen","to live","wohne","gewohnt"],["laufen","to run/walk","laufe","gelaufen"],["helfen","to help","helfe","geholfen"],["fragen","to ask","frage","gefragt"],["suchen","to search","suche","gesucht"],["schlafen","to sleep","schlafe","geschlafen"],["bleiben","to stay","bleibe","geblieben"]
+];
+const extraData=[
+["gut","good"],["schlecht","bad"],["groß","big"],["klein","small"],["teuer","expensive"],["günstig","inexpensive"],["heute","today"],["morgen","tomorrow"],["gestern","yesterday"],["jetzt","now"],["hier","here"],["dort","there"],["links","left"],["rechts","right"],["geradeaus","straight ahead"],["immer","always"],["manchmal","sometimes"],["nie","never"],["viel","a lot"],["wenig","little"],["schnell","fast"],["langsam","slow"],["bitte","please"],["danke","thank you"],["ja","yes"],["nein","no"],["und","and"],["aber","but"],["weil","because"],["auch","also"],["nicht","not"],["kein","no/not any"]
+];
+const phrases={
+"Greetings":[["Guten Morgen!","Good morning"],["Guten Tag!","Hello"],["Guten Abend!","Good evening"],["Auf Wiedersehen!","Goodbye"],["Wie geht es Ihnen?","How are you? (formal)"],["Mir geht es gut, danke.","I'm well, thanks"],["Ich heiße ...","My name is ..."],["Grüezi!","Hello (Swiss greeting)"]],
+"Getting help":[["Sprechen Sie Englisch?","Do you speak English?"],["Ich spreche nur ein bisschen Deutsch.","I speak only a little German"],["Können Sie das bitte wiederholen?","Could you repeat that?"],["Bitte sprechen Sie langsamer.","Please speak more slowly"],["Ich verstehe nicht.","I don't understand"],["Was bedeutet das?","What does that mean?"],["Wie sagt man das auf Deutsch?","How do you say that in German?"],["Können Sie mir helfen?","Can you help me?"]],
+"Shopping & cafés":[["Ich hätte gern einen Kaffee.","I'd like a coffee"],["Die Speisekarte, bitte.","The menu, please"],["Kann ich mit Karte bezahlen?","Can I pay by card?"],["Wie viel kostet das?","How much is that?"],["Die Rechnung, bitte.","The bill, please"],["Das ist alles, danke.","That's all, thanks"]],
+"Transport":[["Wo ist der Bahnhof?","Where is the train station?"],["Wo ist die nächste Haltestelle?","Where is the nearest stop?"],["Fährt dieser Zug nach Zürich?","Does this train go to Zürich?"],["Wann fährt der nächste Zug?","When does the next train leave?"],["Ich brauche ein Ticket.","I need a ticket"],["Ist dieser Platz frei?","Is this seat free?"]],
+"Work & life":[["Ich habe heute eine Besprechung.","I have a meeting today"],["Ich arbeite in Zürich.","I work in Zürich"],["Ich wohne in der Schweiz.","I live in Switzerland"],["Ich habe einen Termin.","I have an appointment"],["Ich lerne gerade Deutsch.","I'm learning German"],["Ich gehe ins Fitnessstudio.","I'm going to the gym"],["Wo kann ich mit meinem Hund spazieren gehen?","Where can I walk my dog?"]],
+"Emergencies":[["Ich brauche Hilfe.","I need help"],["Rufen Sie bitte einen Arzt.","Please call a doctor"],["Wo ist die nächste Apotheke?","Where is the nearest pharmacy?"],["Ich habe meine Schlüssel verloren.","I've lost my keys"],["Ich fühle mich nicht gut.","I don't feel well"]]
+};
+const base=[
+...nounData.map(([article,de,plural,en,cat])=>({id:"n:"+de,type:"noun",article,de,plural,en,cat})),
+...verbData.map(([de,en,ich,participle])=>({id:"v:"+de,type:"verb",de,en,ich,participle,cat:"Verbs"})),
+...extraData.map(([de,en])=>({id:"e:"+de,type:"other",de,en,cat:"Useful words"}))
+];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let mine=[],mastered=[],score=0;
+try{
+mine=JSON.parse(localStorage.getItem("germanMine")||"[]");
+mastered=JSON.parse(localStorage.getItem("germanMastered")||"[]");
+score=Number(localStorage.getItem("germanScore")||0);
+}catch(e){}
+function save(){
+try{
+localStorage.setItem("germanMine",JSON.stringify(mine));
+localStorage.setItem("germanMastered",JSON.stringify(mastered));
+localStorage.setItem("germanScore",String(score));
+}catch(e){$("message").textContent="Storage unavailable. Please export a backup."}
+updateStats();
+}
+function updateStats(){
+$("stats").textContent=mine.length+" personal words · "+mastered.length+" mastered · "+score+" correct quiz answers";
+}
+function show(page){
+document.querySelectorAll("main section").forEach(s=>s.classList.toggle("hidden",s.id!==page));
+document.querySelectorAll("[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+if(page==="mine")renderMine();
+if(page==="practice")resetPractice();
+}
+document.querySelectorAll("[data-page]").forEach(b=>b.onclick=()=>show(b.dataset.page));
+function speak(text){
+if(!("speechSynthesis" in window))return;
+speechSynthesis.cancel();
+const u=new SpeechSynthesisUtterance(text);
+u.lang="de-DE";u.rate=.8;speechSynthesis.speak(u);
+}
+$("grammarList").innerHTML=grammar.map((g,i)=>`<details class="card" ${i===0?"open":""}><summary>${esc(g[0])}</summary><p>${esc(g[1])}</p><p><b>${esc(g[2])}</b></p><p class="muted">💡 ${esc(g[3])}</p></details>`).join("");
+$("phraseCategory").innerHTML=Object.keys(phrases).map(c=>`<option>${esc(c)}</option>`).join("");
+function wordRow(de,en,detail){
+const div=document.createElement("div");
+div.className="word";
+const info=document.createElement("div");
+const b=document.createElement("b");b.textContent=de;
+const meaning=document.createElement("div");meaning.textContent=en;
+const small=document.createElement("div");small.className="muted";small.textContent=detail||"";
+info.append(b,meaning,small);
+const audio=document.createElement("button");audio.textContent="🔊";audio.onclick=()=>speak(de);
+div.append(info,audio);return div;
+}
+function renderPhrases(){
+const list=$("phraseList");list.replaceChildren();
+phrases[$("phraseCategory").value].forEach(([de,en])=>list.append(wordRow(de,en,"")));
+}
+renderPhrases();
+$("category").innerHTML=["All categories",...new Set(base.map(w=>w.cat))].map(c=>`<option>${esc(c)}</option>`).join("");
+function label(w){return w.type==="noun"?w.article+" "+w.de:w.de}
+function detail(w){
+return w.type==="noun"?"Plural: "+(w.plural||"—"):w.type==="verb"?"ich "+(w.ich||"—")+" · Past participle: "+(w.participle||"—"):w.example||"";
+}
+function renderVocab(){
+const q=$("search").value.toLowerCase(),cat=$("category").value;
+const list=$("vocabList");list.replaceChildren();
+base.filter(w=>(cat==="All categories"||w.cat===cat)&&(label(w)+" "+w.en+" "+(w.plural||"")).toLowerCase().includes(q)).forEach(w=>list.append(wordRow(label(w),w.en,detail(w))));
+}
+renderVocab();
+function toggleFields(){
+$("nounFields").classList.toggle("hidden",$("type").value!=="noun");
+$("verbFields").classList.toggle("hidden",$("type").value!=="verb");
+}
+function addWord(){
+const de=$("german").value.trim(),en=$("english").value.trim(),type=$("type").value;
+if(!de||!en){$("message").textContent="Enter the German word and English meaning.";return}
+const w={id:"custom:"+Date.now()+":"+Math.random(),de,en,type,example:$("example").value.trim(),cat:"My words"};
+if(type==="noun"){w.article=$("article").value;w.plural=$("plural").value.trim()}
+if(type==="verb"){w.ich=$("ich").value.trim();w.participle=$("participle").value.trim()}
+mine.unshift(w);save();renderMine();
+["german","english","plural","ich","participle","example"].forEach(id=>$(id).value="");
+$("message").textContent="✓ Word saved!";
+}
+function renderMine(){
+const list=$("myList");list.replaceChildren();
+if(!mine.length){list.textContent="No words yet. Add your first word above.";return}
+mine.forEach(w=>{
+const div=wordRow(label(w),w.en,detail(w)+(w.example?" · "+w.example:""));
+const del=document.createElement("button");del.textContent="×";del.title="Delete word";
+del.onclick=()=>{if(confirm("Delete this word?")){mine=mine.filter(x=>x.id!==w.id);mastered=mastered.filter(id=>id!==w.id);save();renderMine()}};
+div.append(del);list.append(div);
+});
+}
+function csvCell(s){return '"'+String(s??"").replace(/"/g,'""')+'"'}
+function exportWords(){
+const keys=["type","article","de","plural","en","ich","participle","example"];
+const csv=[keys.join(","),...mine.map(w=>keys.map(k=>csvCell(w[k])).join(","))].join("\r\n");
+const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});
+const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="my-german-words.csv";a.click();
+setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function parseCSV(s){
+const rows=[];let row=[],cell="",quoted=false;
+for(let i=0;i<s.length;i++){
+const c=s[i];
+if(c==='"'){if(quoted&&s[i+1]==='"'){cell+='"';i++}else quoted=!quoted}
+else if(c===","&&!quoted){row.push(cell);cell=""}
+else if((c==="\n"||c==="\r")&&!quoted){if(c==="\r"&&s[i+1]==="\n")i++;row.push(cell);if(row.some(x=>x))rows.push(row);row=[];cell=""}
+else cell+=c;
+}
+row.push(cell);if(row.some(x=>x))rows.push(row);return rows;
+}
+async function importWords(event){
+const file=event.target.files[0];if(!file)return;
+try{
+const rows=parseCSV((await file.text()).replace(/^\ufeff/,""));
+const headers=rows.shift().map(x=>x.trim());if(!headers.includes("de")||!headers.includes("en"))throw Error("Missing de/en columns");
+let n=0;
+rows.forEach(r=>{
+const w={};headers.forEach((k,i)=>w[k]=r[i]||"");
+if(!w.de||!w.en)return;
+w.type=["noun","verb","other"].includes(w.type)?w.type:"other";
+w.id="custom:"+Date.now()+":"+Math.random();w.cat="My words";mine.push(w);n++;
+});
+save();renderMine();$("message").textContent=n+" words imported.";
+}catch(e){$("message").textContent="Import failed: "+e.message}
+event.target.value="";
+}
+let index=0,revealed=false,mode="flash",current=null,answered=false,questions=0;
+function pool(){
+const s=$("source").value;
+const words=s==="mine"?mine:[...mine,...base];
+return s==="review"?words.filter(w=>!mastered.includes(w.id)):words;
+}
+function renderFlash(){
+const words=pool();
+if(!words.length){$("flashFront").textContent="No words available";$("flashBack").textContent="Add words or change your filter";return}
+index=(index+words.length)%words.length;
+const w=words[index];
+$("flashType").textContent=w.type==="noun"?"Noun · "+w.article:w.type==="verb"?"Verb":"Vocabulary";
+$("flashFront").textContent=label(w);
+$("flashBack").textContent=revealed?w.en+" · "+detail(w):"Tap to reveal translation";
+$("flashCount").textContent=(index+1)+" of "+words.length+(mastered.includes(w.id)?" · ✓ Mastered":"");
+}
+function flip(){revealed=!revealed;renderFlash()}
+function nextCard(){index++;revealed=false;renderFlash()}
+function previousCard(){index--;revealed=false;renderFlash()}
+function listenCard(){const w=pool()[index];if(w)speak(label(w))}
+function markMastered(){
+const w=pool()[index];if(!w)return;
+mastered=mastered.includes(w.id)?mastered.filter(id=>id!==w.id):[...mastered,w.id];
+save();renderFlash();
+}
+function setMode(m){
+mode=m;$("flashArea").classList.toggle("hidden",m!=="flash");
+$("quizArea").classList.toggle("hidden",m!=="quiz");resetPractice();
+}
+function resetPractice(){index=0;revealed=false;renderFlash();if(mode==="quiz")newQuestion()}
+function newQuestion(){
+const words=pool();$("answers").replaceChildren();$("feedback").textContent="";
+$("nextQuestion").classList.add("hidden");
+if(words.length<4){$("question").textContent="At least four words are needed. Add words or change the filter.";return}
+questions++;answered=false;current=words[Math.floor(Math.random()*words.length)];
+$("quizCount").textContent="Question "+questions;
+$("question").textContent="What does “"+label(current)+"” mean?";
+const others=words.filter(w=>w.en!==current.en).sort(()=>Math.random()-.5).slice(0,3);
+[current,...others].sort(()=>Math.random()-.5).forEach(w=>{
+const b=document.createElement("button");b.className="choice";b.textContent=w.en;
+b.onclick=()=>{
+if(answered)return;answered=true;
+const ok=w.id===current.id;
+if(ok){score++;save()}
+b.classList.add(ok?"correct":"wrong");
+[...$("answers").children].forEach(el=>{if(el.textContent===current.en)el.classList.add("correct")});
+$("feedback").textContent=ok?"✓ Richtig! Correct.":"Correct answer: "+current.en;
+$("nextQuestion").classList.remove("hidden");
+};
+$("answers").append(b);
+});
+}
+updateStats();renderMine();renderFlash();
+</script>
+</body>
+</html>
